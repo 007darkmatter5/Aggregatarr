@@ -1,0 +1,17 @@
+{
+  "data": [
+    {
+      "id": 3,
+      "seriesTitle": "The Glass Harbor",
+      "season": 2,
+      "episode": 2,
+      "title": "High Water",
+      "timestamp": "2026-11-25T18:22:00Z",
+      "action": 1,
+      "language": { "code2": "en", "name": "English" },
+      "provider": "ExampleSubs",
+      "score": 92
+    }
+  ],
+  "total": 1
+}

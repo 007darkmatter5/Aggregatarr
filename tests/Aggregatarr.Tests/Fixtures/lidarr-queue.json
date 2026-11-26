@@ -1,0 +1,23 @@
+{
+  "page": 1,
+  "pageSize": 50,
+  "totalRecords": 1,
+  "records": [
+    {
+      "id": 4,
+      "artistId": 3,
+      "albumId": 40,
+      "title": "Northline - Paper Weather",
+      "size": 310000000,
+      "sizeleft": 300000000,
+      "status": "downloading",
+      "trackedDownloadStatus": "ok",
+      "trackedDownloadState": "downloading",
+      "statusMessages": [],
+      "downloadId": "PAPERWEATHERHASH000000000000000001",
+      "protocol": "torrent",
+      "artist": { "artistName": "Northline", "images": [ { "coverType": "poster", "url": "/MediaCover/3/poster.jpg" } ] },
+      "album": { "title": "Paper Weather", "releaseDate": "2026-11-28" }
+    }
+  ]
+}

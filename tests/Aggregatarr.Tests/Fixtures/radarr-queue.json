@@ -1,0 +1,32 @@
+{
+  "page": 1,
+  "pageSize": 100,
+  "totalRecords": 1,
+  "records": [
+    {
+      "movieId": 21,
+      "id": 9,
+      "title": "Northline 2026",
+      "status": "downloading",
+      "trackedDownloadStatus": "ok",
+      "trackedDownloadState": "downloading",
+      "statusMessages": [],
+      "size": 8640000000,
+      "sizeleft": 7603200000,
+      "timeleft": "00:40:00",
+      "protocol": "torrent",
+      "downloadId": "NORTHLINEHASH00000000000000000001",
+      "indexer": "Example Indexer",
+      "movie": {
+        "id": 21,
+        "title": "Northline",
+        "year": 2026,
+        "hasFile": false,
+        "monitored": true,
+        "images": [
+          { "coverType": "poster", "url": "/MediaCover/21/poster.jpg" }
+        ]
+      }
+    }
+  ]
+}

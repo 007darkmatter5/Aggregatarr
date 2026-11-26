@@ -1,0 +1,20 @@
+{
+  "version": "4.0.15.2942",
+  "buildTime": "2026-11-01T00:00:00Z",
+  "isDebug": false,
+  "isProduction": true,
+  "isAdmin": false,
+  "isUserInteractive": false,
+  "startupPath": "/app",
+  "appData": "/config",
+  "osName": "debian",
+  "osVersion": "12",
+  "isLinux": true,
+  "branch": "main",
+  "authentication": "forms",
+  "urlBase": "",
+  "runtimeVersion": "8.0.11",
+  "runtimeName": "netcore",
+  "startTime": "2026-11-20T08:00:00Z",
+  "packageUpdateMechanism": "docker"
+}

@@ -1,0 +1,9 @@
+{
+  "warnings": [
+    {
+      "text": "Too many connections to news.example:563",
+      "type": "ERROR",
+      "time": 1795690000
+    }
+  ]
+}

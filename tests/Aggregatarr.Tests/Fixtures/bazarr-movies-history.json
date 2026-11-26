@@ -1,0 +1,13 @@
+{
+  "data": [
+    {
+      "id": 8,
+      "title": "Meridian Dogs",
+      "timestamp": "2026-11-22T09:00:00Z",
+      "action": 5,
+      "language": "en",
+      "provider": "ExampleSubs"
+    }
+  ],
+  "total": 1
+}

@@ -1,0 +1,33 @@
+@page
+@model Aggregatarr.Web.Pages.LoginModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    ViewData["Title"] = "Sign in";
+    var tokens = Antiforgery.GetAndStoreTokens(ViewContext.HttpContext);
+}
+
+<section class="auth-card">
+    <img src="/icon.svg" width="48" height="48" alt="" />
+    <h1>Sign in</h1>
+    <p>Aggregatarr keeps the API keys on the server. This account is only for the dashboard.</p>
+    @if (Model.DemoMode)
+    {
+        <p class="auth-note">Demo mode is on. Use <strong>demo</strong> / <strong>demo</strong>. Those are not production credentials.</p>
+    }
+    @if (!string.IsNullOrEmpty(Model.Error))
+    {
+        <div class="auth-error">@Model.Error</div>
+    }
+    <form method="post" class="auth-form" asp-page="/Login" asp-route-returnUrl="@Model.ReturnUrl" asp-antiforgery="false">
+        <input type="hidden" name="@tokens.FormFieldName" value="@tokens.RequestToken" />
+        <label>
+            Username
+            <input asp-for="Username" autocomplete="username" required />
+        </label>
+        <label>
+            Password
+            <input asp-for="Password" type="password" autocomplete="current-password" required />
+        </label>
+        <button type="submit">Sign in</button>
+    </form>
+</section>

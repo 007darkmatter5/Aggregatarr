@@ -1,0 +1,53 @@
+@page "/alerts"
+@attribute [Authorize]
+@inherits LivePage
+
+<PageTitle>Alerts · Aggregatarr</PageTitle>
+
+@if (Problems.Count == 0 && Snapshot.Services.All(s => s.Online))
+{
+    <MudAlert Severity="Severity.Success" Variant="Variant.Outlined">Every configured service is online and none of them are reporting a warning.</MudAlert>
+}
+
+@if (Problems.Count > 0)
+{
+    <div class="alert-list">
+        @foreach (var alert in Problems)
+        {
+            <article class="alert-row level-@alert.Level">
+                <MudIcon Icon="@(alert.Level == "error" ? Icons.Material.Filled.Error : alert.Level == "warning" ? Icons.Material.Filled.Warning : Icons.Material.Filled.Info)" />
+                <div>
+                    <strong>@alert.ServiceName</strong>
+                    <p>@alert.Message</p>
+                    @if (!string.IsNullOrWhiteSpace(alert.Source))
+                    {
+                        <small>@alert.Source</small>
+                    }
+                </div>
+            </article>
+        }
+    </div>
+}
+
+<section class="section-block">
+    <div class="section-head"><h2>Service health</h2></div>
+    @if (Snapshot.Services.Count == 0)
+    {
+        <div class="empty-state">
+            <MudIcon Icon="@Icons.Material.Filled.Dns" />
+            <div>
+                <strong>No services yet</strong>
+                <p>Add one on the Services page. A dead host becomes a card with the reason, not a crashed page.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <HealthCards Services="Snapshot.Services" />
+    }
+</section>
+
+@code {
+    private IReadOnlyList<AlertItem> Problems =>
+        Snapshot.Alerts.Where(a => a.Level is "error" or "warning").ToList();
+}

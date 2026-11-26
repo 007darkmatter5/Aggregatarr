@@ -1,0 +1,86 @@
+@page "/"
+@attribute [Authorize]
+@inherits LivePage
+
+<PageTitle>Dashboard · Aggregatarr</PageTitle>
+
+@if (!Snapshot.DemoMode && Snapshot.Services.Count == 0)
+{
+    <div class="empty-state hero-empty">
+        <img src="icon.svg" width="64" height="64" alt="" />
+        <div>
+            <strong>Connect your stack</strong>
+            <p>Add Sonarr, Radarr, Lidarr, Prowlarr, Bazarr, qBittorrent, or SABnzbd. Keys stay on this server.</p>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/settings">Add a service</MudButton>
+        </div>
+    </div>
+}
+else
+{
+    <section class="stat-row">
+        <article>
+            <span>Active</span>
+            <strong>@Snapshot.Queue.Count</strong>
+            <small>@Snapshot.Queue.Count(q => q.Severity != QueueSeverity.Normal) need attention</small>
+        </article>
+        <article>
+            <span>Download</span>
+            <strong>@SizeFormat.Speed(Snapshot.TotalDownloadBytesPerSecond)</strong>
+            <small>across clients</small>
+        </article>
+        <article>
+            <span>Alerts</span>
+            <strong>@Snapshot.Alerts.Count(a => a.Level is "error" or "warning")</strong>
+            <small>@Snapshot.Services.Count(s => !s.Online) offline</small>
+        </article>
+        <article>
+            <span>Today</span>
+            <strong>@TodayCount</strong>
+            <small>on the calendar</small>
+        </article>
+    </section>
+
+    @if (Snapshot.Alerts.Any(a => a.Level == "error"))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-4" ContentAlignment="HorizontalAlignment.Start">
+            @Snapshot.Alerts.First(a => a.Level == "error").ServiceName: @Snapshot.Alerts.First(a => a.Level == "error").Message
+            <MudButton Href="/alerts" Size="Size.Small" Variant="Variant.Text" Color="Color.Inherit">All alerts</MudButton>
+        </MudAlert>
+    }
+
+    <div class="split">
+        <section>
+            <div class="section-head">
+                <h2>Queue</h2>
+                <MudLink Href="/queue">Open queue</MudLink>
+            </div>
+            <QueueList Items="Snapshot.Queue.Take(5).ToList()" />
+        </section>
+        <section>
+            <div class="section-head">
+                <h2>Activity</h2>
+                <MudLink Href="/activity">Open feed</MudLink>
+            </div>
+            <ActivityList Items="Snapshot.Activity.Take(6).ToList()" />
+        </section>
+    </div>
+
+    <section class="section-block">
+        <div class="section-head">
+            <h2>Services</h2>
+            <MudLink Href="/alerts">Health</MudLink>
+        </div>
+        <HealthCards Services="Snapshot.Services" />
+    </section>
+}
+
+@code {
+    private int TodayCount
+    {
+        get
+        {
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            return Snapshot.Calendar.Count(c => DateOnly.FromDateTime(c.When.ToLocalTime().DateTime) == today);
+        }
+    }
+}

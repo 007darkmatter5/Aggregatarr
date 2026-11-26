@@ -1,0 +1,33 @@
+@page
+@model Aggregatarr.Web.Pages.SetupModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    ViewData["Title"] = "Create account";
+    var tokens = Antiforgery.GetAndStoreTokens(ViewContext.HttpContext);
+}
+
+<section class="auth-card">
+    <img src="/icon.svg" width="48" height="48" alt="" />
+    <h1>Create the admin account</h1>
+    <p>First run only. Aggregatarr is meant for a trusted LAN, optionally behind a reverse proxy. Passwords are hashed. Service API keys are encrypted in <code>/config</code>.</p>
+    @if (!string.IsNullOrEmpty(Model.Error))
+    {
+        <div class="auth-error">@Model.Error</div>
+    }
+    <form method="post" class="auth-form" asp-page="/Setup" asp-antiforgery="false">
+        <input type="hidden" name="@tokens.FormFieldName" value="@tokens.RequestToken" />
+        <label>
+            Username
+            <input asp-for="Username" autocomplete="username" required minlength="3" maxlength="32" />
+        </label>
+        <label>
+            Password
+            <input asp-for="Password" type="password" autocomplete="new-password" required minlength="8" />
+        </label>
+        <label>
+            Confirm password
+            <input asp-for="Confirm" type="password" autocomplete="new-password" required minlength="8" />
+        </label>
+        <button type="submit">Create account</button>
+    </form>
+</section>

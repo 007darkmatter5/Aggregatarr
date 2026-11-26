@@ -1,0 +1,14 @@
+[
+  {
+    "id": 40,
+    "title": "Paper Weather",
+    "artistId": 3,
+    "releaseDate": "2026-11-28T00:00:00Z",
+    "monitored": true,
+    "statistics": { "trackFileCount": 0, "totalTrackCount": 10 },
+    "artist": {
+      "artistName": "Northline",
+      "images": [ { "coverType": "poster", "url": "/MediaCover/3/poster.jpg" } ]
+    }
+  }
+]

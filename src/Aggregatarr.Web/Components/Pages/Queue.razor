@@ -1,0 +1,31 @@
+@page "/queue"
+@attribute [Authorize]
+@inherits LivePage
+@inject IActionService Actions
+@inject ISnackbar Snackbar
+
+<PageTitle>Queue · Aggregatarr</PageTitle>
+
+<div class="toolbar">
+    @foreach (var client in Clients)
+    {
+        <div class="toolbar-group">
+            <span>@client.Name</span>
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="@(!client.Online)" OnClick="() => PauseAll(client)">Pause all</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="@(!client.Online)" OnClick="() => ResumeAll(client)">Resume all</MudButton>
+        </div>
+    }
+</div>
+
+<QueueList Items="Snapshot.Queue" />
+
+@code {
+    private IEnumerable<ServiceHealth> Clients =>
+        Snapshot.Services.Where(s => s.Kind.IsDownloadClient());
+
+    private async Task PauseAll(ServiceHealth client) =>
+        Snackbar.Add((await Actions.PauseAllAsync(client.ServiceId)).Message, Severity.Info);
+
+    private async Task ResumeAll(ServiceHealth client) =>
+        Snackbar.Add((await Actions.ResumeAllAsync(client.ServiceId)).Message, Severity.Info);
+}

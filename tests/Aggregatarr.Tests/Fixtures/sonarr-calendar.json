@@ -1,0 +1,31 @@
+[
+  {
+    "id": 88,
+    "seriesId": 12,
+    "episodeFileId": 0,
+    "seasonNumber": 2,
+    "episodeNumber": 4,
+    "title": "Salt Line",
+    "airDate": "2026-11-25",
+    "airDateUtc": "2026-11-25T01:00:00Z",
+    "hasFile": false,
+    "monitored": true,
+    "series": {
+      "title": "The Glass Harbor",
+      "images": [
+        { "coverType": "poster", "url": "/MediaCover/12/poster.jpg" }
+      ]
+    }
+  },
+  {
+    "id": 90,
+    "seriesId": 12,
+    "seasonNumber": 2,
+    "episodeNumber": 6,
+    "title": "Unwatched",
+    "airDateUtc": "2026-12-09T01:00:00Z",
+    "hasFile": true,
+    "monitored": false,
+    "series": { "title": "The Glass Harbor", "images": [] }
+  }
+]

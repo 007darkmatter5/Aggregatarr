@@ -1,0 +1,31 @@
+<div class="health-grid">
+    @foreach (var service in Services)
+    {
+        <article class="health-card @(service.Online ? "online" : "offline")">
+            <header>
+                <span class="kind-dot @ServiceVisuals.Css(service.Kind)"></span>
+                <div>
+                    <strong>@service.Name</strong>
+                    <small>@service.Kind.DisplayName()</small>
+                </div>
+                <MudChip T="string" Size="Size.Small" Color="@(service.Online ? Color.Success : Color.Error)">@(service.Online ? "Online" : "Offline")</MudChip>
+            </header>
+            <dl>
+                <div><dt>Version</dt><dd>@(service.Version ?? "—")</dd></div>
+                <div><dt>Response</dt><dd>@(service.ResponseTimeMs is null ? "—" : $"{service.ResponseTimeMs} ms")</dd></div>
+            </dl>
+            @if (!service.Online && !string.IsNullOrWhiteSpace(service.Error))
+            {
+                <p class="health-error">@service.Error</p>
+            }
+            @foreach (var warning in service.Warnings.Where(w => w.Level is "error" or "warning"))
+            {
+                <p class="health-warn">@warning.Message</p>
+            }
+        </article>
+    }
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<ServiceHealth> Services { get; set; } = [];
+}

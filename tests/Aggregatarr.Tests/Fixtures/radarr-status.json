@@ -1,0 +1,11 @@
+{
+  "version": "5.18.4.9674",
+  "buildTime": "2026-10-01T00:00:00Z",
+  "isProduction": true,
+  "isLinux": true,
+  "branch": "master",
+  "authentication": "forms",
+  "urlBase": "",
+  "appData": "/config",
+  "startTime": "2026-11-20T08:00:00Z"
+}

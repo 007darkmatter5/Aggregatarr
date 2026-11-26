@@ -1,0 +1,15 @@
+[
+  {
+    "id": 21,
+    "title": "Northline",
+    "year": 2026,
+    "hasFile": false,
+    "monitored": true,
+    "inCinemas": "2026-10-01T00:00:00Z",
+    "digitalRelease": "2026-12-02T00:00:00Z",
+    "physicalRelease": "2027-01-15T00:00:00Z",
+    "images": [
+      { "coverType": "poster", "url": "/MediaCover/21/poster.jpg", "remoteUrl": "https://images.example/northline.jpg" }
+    ]
+  }
+]

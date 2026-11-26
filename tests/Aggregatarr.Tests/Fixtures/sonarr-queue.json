@@ -1,0 +1,46 @@
+{
+  "page": 1,
+  "pageSize": 100,
+  "sortKey": "timeleft",
+  "sortDirection": "ascending",
+  "totalRecords": 1,
+  "records": [
+    {
+      "seriesId": 12,
+      "episodeId": 88,
+      "id": 144,
+      "title": "The Glass Harbor - S02E04 - Salt Line",
+      "status": "warning",
+      "trackedDownloadStatus": "warning",
+      "trackedDownloadState": "importBlocked",
+      "statusMessages": [
+        {
+          "title": "Import blocked",
+          "messages": ["No files found are eligible for import"]
+        }
+      ],
+      "size": 4180000000,
+      "sizeleft": 1170400000,
+      "timeleft": "00:04:12",
+      "estimatedCompletionTime": "2026-11-26T19:10:00Z",
+      "protocol": "torrent",
+      "downloadId": "8c212779b4abde7c6bc608063a0d008b7e40ce32",
+      "indexer": "Example Indexer",
+      "series": {
+        "title": "The Glass Harbor",
+        "images": [
+          { "coverType": "poster", "url": "/MediaCover/12/poster.jpg", "remoteUrl": "https://images.example/poster.jpg" }
+        ]
+      },
+      "episode": {
+        "id": 88,
+        "seasonNumber": 2,
+        "episodeNumber": 4,
+        "title": "Salt Line",
+        "airDateUtc": "2026-11-25T01:00:00Z",
+        "hasFile": false,
+        "monitored": true
+      }
+    }
+  ]
+}

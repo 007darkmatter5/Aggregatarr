@@ -1,0 +1,29 @@
+{
+  "page": 1,
+  "pageSize": 40,
+  "sortKey": "date",
+  "sortDirection": "descending",
+  "totalRecords": 2,
+  "records": [
+    {
+      "id": 501,
+      "episodeId": 80,
+      "seriesId": 12,
+      "sourceTitle": "Glass.Harbor.S02E02.1080p.WEB.x264",
+      "series": { "title": "The Glass Harbor" },
+      "quality": { "quality": { "id": 3, "name": "WEBDL-1080p" } },
+      "date": "2026-11-26T12:00:00Z",
+      "eventType": "grabbed",
+      "downloadId": "abc123"
+    },
+    {
+      "id": 502,
+      "episodeId": 79,
+      "seriesId": 12,
+      "sourceTitle": "Glass.Harbor.S02E01.1080p",
+      "date": "2026-11-25T08:00:00Z",
+      "eventType": "downloadFailed",
+      "downloadId": "def456"
+    }
+  ]
+}

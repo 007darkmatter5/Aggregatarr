@@ -1,0 +1,176 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject NavigationManager Navigation
+@inject IJSRuntime Js
+@inject DashboardStore Store
+@inject IDashboardRefresh Refresh
+
+<MudThemeProvider Theme="_theme" @bind-IsDarkMode="_dark" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="0" Class="ag-appbar">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="() => _open = !_open" aria-label="Menu" />
+        <a class="brand-lockup" href="/">
+            <img src="icon.svg" width="28" height="28" alt="" />
+            <span>Aggregatarr</span>
+        </a>
+        <MudSpacer />
+        <MudTooltip Text="Refresh">
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Inherit" OnClick="RefreshNow" aria-label="Refresh" />
+        </MudTooltip>
+        <MudTooltip Text="@(_dark ? "Light theme" : "Dark theme")">
+            <MudIconButton Icon="@(_dark ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)" Color="Color.Inherit" OnClick="ToggleTheme" aria-label="Toggle theme" />
+        </MudTooltip>
+        <MudTooltip Text="Sign out">
+            <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" OnClick="Logout" aria-label="Sign out" />
+        </MudTooltip>
+    </MudAppBar>
+    <MudDrawer @bind-Open="_open" ClipMode="DrawerClipMode.Always" Breakpoint="Breakpoint.Md" Elevation="0" Variant="DrawerVariant.Responsive" Class="ag-drawer">
+        <MudNavMenu Class="ag-nav">
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.SpaceDashboard">Dashboard</MudNavLink>
+            <MudNavLink Href="/queue" Icon="@Icons.Material.Filled.Download">
+                Queue
+                @if (Store.Current.Queue.Count > 0)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Class="nav-count">@Store.Current.Queue.Count</MudChip>
+                }
+            </MudNavLink>
+            <MudNavLink Href="/calendar" Icon="@Icons.Material.Filled.CalendarMonth">Calendar</MudNavLink>
+            <MudNavLink Href="/activity" Icon="@Icons.Material.Filled.History">Activity</MudNavLink>
+            <MudNavLink Href="/alerts" Icon="@Icons.Material.Filled.NotificationImportant">
+                Alerts
+                @if (ProblemCount > 0)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Error" Class="nav-count">@ProblemCount</MudChip>
+                }
+            </MudNavLink>
+            <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.Tune">Services</MudNavLink>
+        </MudNavMenu>
+        <div class="drawer-foot">
+            <span class="@(_dark ? "dot ok" : "dot ok")"></span>
+            <span>@Ago</span>
+        </div>
+    </MudDrawer>
+    <MudMainContent Class="ag-main">
+        @if (Store.Current.DemoMode)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="demo-banner" Icon="@Icons.Material.Filled.Science">
+                Demo mode. Queue, calendar, activity, and alerts are sample data. Hosts such as sonarr.example and gluetun.example are not real.
+            </MudAlert>
+        }
+        <header class="page-head">
+            <div>
+                <p class="eyebrow">Home media</p>
+                <h1>@Title</h1>
+            </div>
+            <p class="updated">@Ago</p>
+        </header>
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private readonly MudTheme _theme = AggregatarrTheme.Build();
+    private bool _open = true;
+    private bool _dark = true;
+
+    private string Title => PathOf(Navigation) switch
+    {
+        "" or "/" => "Dashboard",
+        "queue" => "Download queue",
+        "calendar" => "Calendar",
+        "activity" => "Activity",
+        "alerts" => "Alerts",
+        "settings" => "Services",
+        _ => "Aggregatarr"
+    };
+
+    private int ProblemCount => Store.Current.Alerts.Count(a => a.Level is "error" or "warning")
+        + Store.Current.Services.Count(s => !s.Online);
+
+    private string Ago
+    {
+        get
+        {
+            if (Store.Current.Services.Count == 0 && Store.Current.Queue.Count == 0 && !Store.Current.DemoMode)
+                return "Waiting for the first poll";
+            var delta = DateTimeOffset.UtcNow - Store.Current.UpdatedAt;
+            if (delta < TimeSpan.Zero || delta.TotalSeconds < 5)
+                return "Updated just now";
+            if (delta.TotalMinutes < 1)
+                return $"Updated {(int)delta.TotalSeconds}s ago";
+            return $"Updated {(int)delta.TotalMinutes}m ago";
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        Store.Changed += OnChanged;
+        Navigation.LocationChanged += OnLocation;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+        try
+        {
+            var theme = await Js.InvokeAsync<string>("aggregatarr.getTheme");
+            _dark = !string.Equals(theme, "light", StringComparison.OrdinalIgnoreCase);
+            await Js.InvokeVoidAsync("aggregatarr.setTheme", _dark ? "dark" : "light");
+            StateHasChanged();
+        }
+        catch (InvalidOperationException)
+        {
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private void OnLocation(object? sender, LocationChangedEventArgs e) => InvokeAsync(StateHasChanged);
+
+    private void RefreshNow() => Refresh.Kick();
+
+    private async Task ToggleTheme()
+    {
+        _dark = !_dark;
+        try
+        {
+            await Js.InvokeVoidAsync("aggregatarr.setTheme", _dark ? "dark" : "light");
+        }
+        catch (InvalidOperationException)
+        {
+        }
+    }
+
+    private async Task Logout()
+    {
+        try
+        {
+            await Js.InvokeVoidAsync("aggregatarr.logout");
+        }
+        catch (InvalidOperationException)
+        {
+            Navigation.NavigateTo("/logout", forceLoad: true);
+        }
+    }
+
+    private static string PathOf(NavigationManager navigation)
+    {
+        var path = navigation.ToBaseRelativePath(navigation.Uri);
+        var cut = path.IndexOfAny(['?', '#']);
+        return cut >= 0 ? path[..cut] : path;
+    }
+
+    public void Dispose()
+    {
+        Store.Changed -= OnChanged;
+        Navigation.LocationChanged -= OnLocation;
+    }
+}

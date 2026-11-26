@@ -1,0 +1,118 @@
+@inject IActionService Actions
+@inject IDialogService Dialogs
+@inject ISnackbar Snackbar
+
+@if (Items.Count == 0)
+{
+    <div class="empty-state">
+        <MudIcon Icon="@Icons.Material.Filled.DownloadDone" />
+        <div>
+            <strong>Nothing in the queue</strong>
+            <p>Active downloads from qBittorrent and SABnzbd show up here, matched to the series, movie, or album when Sonarr, Radarr, or Lidarr know about them.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="queue-list">
+        @foreach (var item in Items)
+        {
+            <article class="queue-row sev-@item.Severity.ToString().ToLowerInvariant()">
+                <div class="queue-main">
+                    <div class="queue-title">
+                        <h3>@item.Title</h3>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Class="@ServiceVisuals.Css(item.ClientKind)">@item.ClientName</MudChip>
+                        @if (item.Severity == QueueSeverity.Failed)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Error">Failed</MudChip>
+                        }
+                        else if (item.Severity == QueueSeverity.Stuck)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning">Stuck</MudChip>
+                        }
+                        else if (item.IsPaused)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Default">Paused</MudChip>
+                        }
+                    </div>
+                    <p class="queue-sub">
+                        @if (!string.IsNullOrWhiteSpace(item.Subtitle))
+                        {
+                            <span>@item.Subtitle</span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(item.MatchedTo))
+                        {
+                            <span class="match">@item.MatchedTo</span>
+                        }
+                    </p>
+                    <MudProgressLinear Value="@(Math.Clamp(item.Progress, 0, 1) * 100)" Color="@Bar(item)" Rounded="true" Size="Size.Medium" Class="queue-bar" />
+                    <dl class="queue-meta">
+                        <div><dt>Progress</dt><dd>@SizeFormat.Percent(item.Progress)</dd></div>
+                        <div><dt>Speed</dt><dd>@SizeFormat.Speed(item.SpeedBytesPerSecond)</dd></div>
+                        <div><dt>ETA</dt><dd>@SizeFormat.Eta(item.Eta)</dd></div>
+                        <div><dt>Size</dt><dd>@SizeLabel(item)</dd></div>
+                        <div><dt>State</dt><dd>@item.State</dd></div>
+                    </dl>
+                    @if (!string.IsNullOrWhiteSpace(item.StatusDetail))
+                    {
+                        <p class="queue-detail">@item.StatusDetail</p>
+                    }
+                </div>
+                <div class="queue-actions">
+                    @if (item.CanPause)
+                    {
+                        <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@(item.IsPaused ? Icons.Material.Filled.PlayArrow : Icons.Material.Filled.Pause)" OnClick="() => Toggle(item)">
+                            @(item.IsPaused ? "Resume" : "Pause")
+                        </MudButton>
+                    }
+                    @if (item.CanRemove)
+                    {
+                        <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => Remove(item)">Remove</MudButton>
+                    }
+                </div>
+            </article>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public IReadOnlyList<QueueItem> Items { get; set; } = [];
+
+    private static Color Bar(QueueItem item) => item.Severity switch
+    {
+        QueueSeverity.Failed => Color.Error,
+        QueueSeverity.Stuck => Color.Warning,
+        _ => Color.Primary
+    };
+
+    private static string SizeLabel(QueueItem item)
+    {
+        if (item.SizeBytes is null)
+            return "—";
+        if (item.RemainingBytes is null || item.Progress >= 0.999)
+            return SizeFormat.Bytes(item.SizeBytes);
+        var done = item.SizeBytes.Value - item.RemainingBytes.Value;
+        return $"{SizeFormat.Bytes(done)} / {SizeFormat.Bytes(item.SizeBytes)}";
+    }
+
+    private async Task Toggle(QueueItem item)
+    {
+        var result = item.IsPaused ? await Actions.ResumeAsync(item) : await Actions.PauseAsync(item);
+        Toast(result);
+    }
+
+    private async Task Remove(QueueItem item)
+    {
+        var yes = await Dialogs.ShowMessageBoxAsync(
+            "Remove from queue?",
+            $"Remove \"{item.Title}\" from {item.ClientName}? Files already on disk are left in place.",
+            yesText: "Remove",
+            cancelText: "Cancel");
+        if (yes != true)
+            return;
+        Toast(await Actions.RemoveAsync(item));
+    }
+
+    private void Toast(ActionOutcome result) =>
+        Snackbar.Add(result.Message, result.Ok ? Severity.Success : Severity.Error);
+}

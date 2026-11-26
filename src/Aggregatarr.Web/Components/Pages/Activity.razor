@@ -1,0 +1,25 @@
+@page "/activity"
+@attribute [Authorize]
+@inherits LivePage
+
+<PageTitle>Activity · Aggregatarr</PageTitle>
+
+<div class="toolbar">
+    <MudChip T="string" Size="Size.Small" Variant="@Chip(null)" OnClick="() => _filter = null">All</MudChip>
+    @foreach (var kind in new[] { ActivityKind.Grab, ActivityKind.Import, ActivityKind.Failure, ActivityKind.Upgrade, ActivityKind.Complete, ActivityKind.Subtitle })
+    {
+        var local = kind;
+        <MudChip T="string" Size="Size.Small" Variant="@Chip(local)" OnClick="() => _filter = local">@local</MudChip>
+    }
+</div>
+
+<ActivityList Items="Filtered" />
+
+@code {
+    private ActivityKind? _filter;
+
+    private IReadOnlyList<ActivityItem> Filtered =>
+        _filter is null ? Snapshot.Activity : Snapshot.Activity.Where(a => a.Kind == _filter).ToList();
+
+    private Variant Chip(ActivityKind? kind) => _filter == kind ? Variant.Filled : Variant.Outlined;
+}

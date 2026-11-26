@@ -1,0 +1,233 @@
+@page "/calendar"
+@attribute [Authorize]
+@inherits LivePage
+@inject IActionService Actions
+@inject ISnackbar Snackbar
+@inject IDialogService Dialogs
+@inject IDashboardRefresh Refresh
+
+<PageTitle>Calendar · Aggregatarr</PageTitle>
+
+<div class="toolbar calendar-toolbar">
+    <div class="toolbar-group">
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" aria-label="Previous" OnClick="Previous" />
+        <strong>@Heading</strong>
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" aria-label="Next" OnClick="Next" />
+        <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="Today">Today</MudButton>
+    </div>
+    <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small">
+        <MudButton Color="@(_view == "month" ? Color.Primary : Color.Default)" OnClick='() => _view = "month"'>Month</MudButton>
+        <MudButton Color="@(_view == "week" ? Color.Primary : Color.Default)" OnClick='() => _view = "week"'>Week</MudButton>
+        <MudButton Color="@(_view == "agenda" ? Color.Primary : Color.Default)" OnClick='() => _view = "agenda"'>Agenda</MudButton>
+    </MudButtonGroup>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Search" OnClick="SearchAll">Search all missing</MudButton>
+</div>
+
+@if (_view == "agenda")
+{
+    <div class="agenda">
+        @foreach (var group in AgendaGroups)
+        {
+            <section>
+                <h2>@group.Key.ToString("dddd, MMM d")</h2>
+                @foreach (var item in group)
+                {
+                    <div class="agenda-row">
+                        <img src="@item.PosterUrl" alt="" width="40" height="60" />
+                        <div>
+                            <strong>@item.Title</strong>
+                            <p>@item.Detail @item.EpisodeTitle</p>
+                        </div>
+                        <MudChip T="string" Size="Size.Small" Color="@StateColor(item.State)">@item.State</MudChip>
+                        @if (item.CanSearch)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Search" aria-label="Search" OnClick="() => SearchOne(item)" />
+                        }
+                    </div>
+                }
+            </section>
+        }
+        @if (!AgendaGroups.Any())
+        {
+            <div class="empty-state"><MudIcon Icon="@Icons.Material.Filled.EventBusy" /><div><strong>Nothing in this range</strong><p>Sonarr episodes, Radarr releases, and Lidarr albums appear when those apps are connected.</p></div></div>
+        }
+    </div>
+}
+else
+{
+    <div class="cal @(_view == "week" ? "week" : "month")">
+        @foreach (var name in new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" })
+        {
+            <div class="cal-dow">@name</div>
+        }
+        @foreach (var day in Cells)
+        {
+            var items = ItemsOn(day);
+            <div class="cal-day @(day.Month == _cursor.Month || _view == "week" ? "" : "muted") @(day == DateOnly.FromDateTime(DateTime.Today) ? "today" : "")">
+                <header>@day.Day</header>
+                @foreach (var item in items.Take(_view == "week" ? 6 : 3))
+                {
+                    <button type="button" class="cal-pill state-@item.State.ToString().ToLowerInvariant()" @onclick="() => Select(item)">
+                        <img src="@item.PosterUrl" alt="" width="18" height="26" />
+                        <span>@(item.Detail ?? item.Title)</span>
+                    </button>
+                }
+                @if (items.Count > (_view == "week" ? 6 : 3))
+                {
+                    <small>+@(items.Count - (_view == "week" ? 6 : 3))</small>
+                }
+            </div>
+        }
+    </div>
+}
+
+@if (_selected is not null)
+{
+    <MudPaper Class="cal-detail" Elevation="0">
+        <img src="@_selected.PosterUrl" alt="" width="72" height="108" />
+        <div>
+            <p class="eyebrow">@_selected.SourceName</p>
+            <h2>@_selected.Title</h2>
+            <p>@(_selected.Detail) @(_selected.EpisodeTitle)</p>
+            <p>@_selected.When.ToLocalTime().ToString("dddd, MMM d · HH:mm")</p>
+            <MudChip T="string" Size="Size.Small" Color="@StateColor(_selected.State)">@_selected.State</MudChip>
+            @if (_selected.CanSearch)
+            {
+                <MudButton Class="ms-2" Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Search" OnClick="() => SearchOne(_selected)">Search</MudButton>
+            }
+        </div>
+        <MudIconButton Icon="@Icons.Material.Filled.Close" aria-label="Close" OnClick="() => _selected = null" />
+    </MudPaper>
+}
+
+@code {
+    private DateOnly _cursor = DateOnly.FromDateTime(DateTime.Today);
+    private string _view = "month";
+    private CalendarItem? _selected;
+
+    private string Heading => _view switch
+    {
+        "week" => $"{WeekStart():MMM d} – {WeekStart().AddDays(6):MMM d}",
+        "agenda" => _cursor.ToString("MMMM yyyy"),
+        _ => _cursor.ToString("MMMM yyyy")
+    };
+
+    private IEnumerable<DateOnly> Cells => _view == "week"
+        ? Enumerable.Range(0, 7).Select(i => WeekStart().AddDays(i))
+        : MonthCells();
+
+    private IEnumerable<IGrouping<DateOnly, CalendarItem>> AgendaGroups =>
+        Snapshot.Calendar
+            .Where(c =>
+            {
+                var day = DateOnly.FromDateTime(c.When.ToLocalTime().DateTime);
+                var start = new DateOnly(_cursor.Year, _cursor.Month, 1);
+                var end = start.AddMonths(1).AddDays(-1);
+                return day >= start && day <= end;
+            })
+            .GroupBy(c => DateOnly.FromDateTime(c.When.ToLocalTime().DateTime))
+            .OrderBy(g => g.Key);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+        try
+        {
+            var width = await JsWidth();
+            if (width > 0 && width < 720 && _view == "month")
+            {
+                _view = "agenda";
+                StateHasChanged();
+            }
+        }
+        catch (InvalidOperationException)
+        {
+        }
+    }
+
+    [Inject] private IJSRuntime Js { get; set; } = default!;
+
+    private async Task<int> JsWidth()
+    {
+        try
+        {
+            return await Js.InvokeAsync<int>("aggregatarr.width");
+        }
+        catch (JSException)
+        {
+            return 0;
+        }
+    }
+
+    private IReadOnlyList<CalendarItem> ItemsOn(DateOnly day) =>
+        Snapshot.Calendar.Where(c => DateOnly.FromDateTime(c.When.ToLocalTime().DateTime) == day).OrderBy(c => c.When).ToList();
+
+    private IEnumerable<DateOnly> MonthCells()
+    {
+        var first = new DateOnly(_cursor.Year, _cursor.Month, 1);
+        var offset = ((int)first.DayOfWeek + 6) % 7;
+        var start = first.AddDays(-offset);
+        for (var i = 0; i < 42; i++)
+            yield return start.AddDays(i);
+    }
+
+    private DateOnly WeekStart()
+    {
+        var offset = ((int)_cursor.DayOfWeek + 6) % 7;
+        return _cursor.AddDays(-offset);
+    }
+
+    private void Select(CalendarItem item) => _selected = item;
+
+    private void Previous()
+    {
+        _cursor = _view == "week" ? _cursor.AddDays(-7) : _cursor.AddMonths(-1);
+        Cover();
+    }
+
+    private void Next()
+    {
+        _cursor = _view == "week" ? _cursor.AddDays(7) : _cursor.AddMonths(1);
+        Cover();
+    }
+
+    private void Today()
+    {
+        _cursor = DateOnly.FromDateTime(DateTime.Today);
+        Cover();
+    }
+
+    private void Cover()
+    {
+        if (Store.EnsureCalendarCovers(_cursor))
+            Refresh.Kick();
+    }
+
+    private async Task SearchOne(CalendarItem item)
+    {
+        var result = await Actions.SearchAsync(item);
+        Snackbar.Add(result.Message, result.Ok ? Severity.Success : Severity.Error);
+    }
+
+    private async Task SearchAll()
+    {
+        var yes = await Dialogs.ShowMessageBoxAsync(
+            "Search all missing?",
+            "This asks Sonarr, Radarr, and Lidarr to search for everything they still want. Indexers will get a burst of queries.",
+            yesText: "Search",
+            cancelText: "Cancel");
+        if (yes != true)
+            return;
+        var result = await Actions.SearchAllMissingAsync();
+        Snackbar.Add(result.Message, result.Ok ? Severity.Success : Severity.Warning);
+    }
+
+    private static Color StateColor(CalendarState state) => state switch
+    {
+        CalendarState.Downloaded => Color.Success,
+        CalendarState.Missing => Color.Warning,
+        CalendarState.Unmonitored => Color.Default,
+        _ => Color.Info
+    };
+}

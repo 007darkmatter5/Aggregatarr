@@ -1,0 +1,58 @@
+[
+  {
+    "hash": "8c212779b4abde7c6bc608063a0d008b7e40ce32",
+    "name": "Glass.Harbor.S02E04.2160p.WEB.x265",
+    "size": 4180000000,
+    "progress": 0.72,
+    "dlspeed": 0,
+    "upspeed": 0,
+    "eta": 8640000,
+    "state": "error",
+    "category": "tv",
+    "tags": "",
+    "completion_on": 0,
+    "added_on": 1795600000
+  },
+  {
+    "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "name": "Northline.2026.1080p.BluRay.x264",
+    "size": 8640000000,
+    "progress": 0.12,
+    "dlspeed": 0,
+    "eta": 8640000,
+    "state": "stalledDL",
+    "category": "movies",
+    "completion_on": 0
+  },
+  {
+    "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "name": "Paper.Satellites.S01E08.1080p",
+    "size": 2460000000,
+    "progress": 0.64,
+    "dlspeed": 18700000,
+    "eta": 87,
+    "state": "downloading",
+    "category": "tv",
+    "completion_on": 0
+  },
+  {
+    "hash": "cccccccccccccccccccccccccccccccccccccccc",
+    "name": "Already.Seeding.iso",
+    "size": 1000,
+    "progress": 1,
+    "dlspeed": 0,
+    "eta": 8640000,
+    "state": "uploading",
+    "completion_on": 1795694400
+  },
+  {
+    "hash": "dddddddddddddddddddddddddddddddddddddddd",
+    "name": "Paused.Download.mkv",
+    "size": 500000000,
+    "progress": 0.2,
+    "dlspeed": 0,
+    "eta": 8640000,
+    "state": "pausedDL",
+    "completion_on": 0
+  }
+]

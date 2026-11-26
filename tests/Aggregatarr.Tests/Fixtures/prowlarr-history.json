@@ -1,0 +1,16 @@
+{
+  "page": 1,
+  "pageSize": 40,
+  "totalRecords": 1,
+  "records": [
+    {
+      "id": 9,
+      "eventType": "releaseGrabbed",
+      "sourceTitle": "Glass.Harbor.S02E04.2160p",
+      "date": "2026-11-26T11:00:00Z",
+      "successful": true,
+      "indexer": "Example Indexer",
+      "downloadClient": "qBittorrent"
+    }
+  ]
+}

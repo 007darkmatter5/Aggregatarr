@@ -1,0 +1,59 @@
+@if (Items.Count == 0)
+{
+    <div class="empty-state">
+        <MudIcon Icon="@Icons.Material.Filled.History" />
+        <div>
+            <strong>No recent activity</strong>
+            <p>Grabs, imports, failures, upgrades, and completed downloads will land here.</p>
+        </div>
+    </div>
+}
+else
+{
+    <ol class="activity">
+        @foreach (var item in Items)
+        {
+            <li>
+                <span class="activity-mark kind-@item.Kind.ToString().ToLowerInvariant()"></span>
+                <div>
+                    <div class="activity-top">
+                        <strong>@item.Title</strong>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Class="@ServiceVisuals.Css(item.Source)">@item.SourceName</MudChip>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@KindColor(item.Kind)">@item.Kind</MudChip>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(item.Detail))
+                    {
+                        <p>@item.Detail</p>
+                    }
+                </div>
+                <time>@When(item.When)</time>
+            </li>
+        }
+    </ol>
+}
+
+@code {
+    [Parameter] public IReadOnlyList<ActivityItem> Items { get; set; } = [];
+
+    private static Color KindColor(ActivityKind kind) => kind switch
+    {
+        ActivityKind.Failure => Color.Error,
+        ActivityKind.Upgrade => Color.Info,
+        ActivityKind.Import or ActivityKind.Complete => Color.Success,
+        ActivityKind.Grab or ActivityKind.Subtitle => Color.Primary,
+        _ => Color.Default
+    };
+
+    private static string When(DateTimeOffset when)
+    {
+        var local = when.ToLocalTime();
+        var delta = DateTimeOffset.Now - local;
+        if (delta.TotalMinutes < 1)
+            return "just now";
+        if (delta.TotalHours < 1)
+            return $"{(int)delta.TotalMinutes}m ago";
+        if (delta.TotalHours < 36)
+            return $"{(int)delta.TotalHours}h ago";
+        return local.ToString("MMM d, HH:mm");
+    }
+}

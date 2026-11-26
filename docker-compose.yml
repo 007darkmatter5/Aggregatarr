@@ -1,0 +1,16 @@
+# Example only. Hostnames below are documentation, not a running stack.
+# qBittorrent and SABnzbd that sit behind gluetun are reached at the gluetun
+# host's address and their own ports. Put those URLs on the Services page;
+# they do not need to share a hostname with Sonarr or Radarr.
+
+services:
+  aggregatarr:
+    image: ghcr.io/007darkmatter5/aggregatarr:latest
+    container_name: aggregatarr
+    ports:
+      - "8080:8080"
+    environment:
+      TZ: UTC
+    volumes:
+      - ./config:/config
+    restart: unless-stopped

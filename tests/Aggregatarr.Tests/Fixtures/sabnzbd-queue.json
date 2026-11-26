@@ -1,0 +1,45 @@
+{
+  "queue": {
+    "status": "Downloading",
+    "speedlimit": "0",
+    "speedlimit_abs": "0",
+    "paused": false,
+    "paused_all": false,
+    "noofslots": 2,
+    "timeleft": "0:08:10",
+    "speed": "8.1 M",
+    "kbpersec": "8056.64",
+    "size": "1.1 GB",
+    "sizeleft": "650 MB",
+    "mb": "1100.00",
+    "mbleft": "650.00",
+    "version": "4.4.1",
+    "slots": [
+      {
+        "status": "Downloading",
+        "index": 0,
+        "mb": "1100.00",
+        "mbleft": "649.00",
+        "filename": "Low.Orbit.Club.S03E02.720p.WEB.x264",
+        "priority": "Normal",
+        "cat": "tv",
+        "timeleft": "0:08:10",
+        "percentage": "41",
+        "nzo_id": "SABnzbd_nzo_loworbit",
+        "labels": []
+      },
+      {
+        "status": "Paused",
+        "index": 1,
+        "mb": "6200.00",
+        "mbleft": "5700.00",
+        "filename": "Salt.Road.2025.2160p.WEB.H265",
+        "cat": "movies",
+        "timeleft": "0:00:00",
+        "percentage": "8",
+        "nzo_id": "SABnzbd_nzo_saltroad",
+        "labels": ["DUPLICATE"]
+      }
+    ]
+  }
+}

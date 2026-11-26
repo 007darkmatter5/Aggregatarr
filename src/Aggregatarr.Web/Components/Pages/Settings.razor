@@ -1,0 +1,258 @@
+@page "/settings"
+@attribute [Authorize]
+@inject ServiceAdmin Admin
+@inject AccountService Accounts
+@inject AuthenticationStateProvider Auth
+@inject ISnackbar Snackbar
+@inject IDialogService Dialogs
+@inject IDashboardRefresh Refresh
+@using Aggregatarr.Connectors
+
+<PageTitle>Services · Aggregatarr</PageTitle>
+
+<MudGrid Spacing="3">
+    <MudItem xs="12" lg="7">
+        @if (_services.Count == 0)
+        {
+            <div class="empty-state">
+                <MudIcon Icon="@Icons.Material.Filled.Dns" />
+                <div>
+                    <strong>No services saved</strong>
+                    <p>Add each app with its URL and credential. The browser only ever learns that a key is stored, not the key itself.</p>
+                </div>
+            </div>
+        }
+        @foreach (var service in _services)
+        {
+            <MudPaper Class="service-card" Elevation="0">
+                <div class="service-card-top">
+                    <span class="kind-dot @ServiceVisuals.Css(service.Kind)"></span>
+                    <div>
+                        <strong>@service.Name</strong>
+                        <small>@service.Kind.DisplayName()</small>
+                        <code>@service.BaseUrl</code>
+                    </div>
+                    <MudSwitch T="bool" Value="service.Enabled" ValueChanged="v => Toggle(service, v)" Color="Color.Primary" aria-label="Enabled" />
+                </div>
+                <div class="service-card-meta">
+                    @if (service.Kind.UsesApiKey())
+                    {
+                        <span>@(service.HasApiKey ? "API key stored on the server" : "No API key")</span>
+                    }
+                    @if (service.Kind.UsesPassword())
+                    {
+                        <span>@(service.Username ?? "No username") · @(service.HasPassword ? "password stored on the server" : "no password")</span>
+                    }
+                </div>
+                <div class="service-card-actions">
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="() => TestSaved(service)">Test connection</MudButton>
+                    <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="() => Edit(service)">Edit</MudButton>
+                    <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error" OnClick="() => Delete(service)">Delete</MudButton>
+                </div>
+            </MudPaper>
+        }
+
+        <section class="section-block">
+            <div class="section-head"><h2>Action log</h2></div>
+            @if (_log.Count == 0)
+            {
+                <p class="hint">Pause, resume, remove, and search actions are written here.</p>
+            }
+            else
+            {
+                <div class="log-table">
+                    @foreach (var entry in _log)
+                    {
+                        <div class="log-row">
+                            <time>@entry.At.ToLocalTime().ToString("MMM d HH:mm")</time>
+                            <strong>@entry.Action</strong>
+                            <span>@entry.ServiceName</span>
+                            <span>@entry.Target</span>
+                            <MudChip T="string" Size="Size.Small" Color="@(entry.Success ? Color.Success : Color.Error)">@(entry.Success ? "ok" : "failed")</MudChip>
+                        </div>
+                    }
+                </div>
+            }
+        </section>
+    </MudItem>
+    <MudItem xs="12" lg="5">
+        <MudPaper Class="editor" Elevation="0">
+            <h2>@(_draft.Id is null ? "Add a service" : "Edit " + _draft.Name)</h2>
+            <MudSelect T="ServiceKind" Value="_draft.Kind" ValueChanged="OnKind" Label="Application" Variant="Variant.Outlined" Margin="Margin.Dense">
+                @foreach (var kind in Enum.GetValues<ServiceKind>())
+                {
+                    <MudSelectItem T="ServiceKind" Value="kind">@kind.DisplayName()</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextField @bind-Value="_draft.Name" Label="Name" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudTextField @bind-Value="_draft.BaseUrl" Label="Base URL" Variant="Variant.Outlined" Margin="Margin.Dense" HelperText="@UrlHint" />
+            @if (_draft.Kind.UsesPassword())
+            {
+                <MudTextField @bind-Value="_draft.Username" Label="WebUI username" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudTextField @bind-Value="_draft.Password" Label="WebUI password" InputType="InputType.Password" Variant="Variant.Outlined" Margin="Margin.Dense"
+                              HelperText="@(_hasPassword ? "Leave blank to keep the password already stored." : "Stored encrypted. It is not sent back to the browser.")" />
+            }
+            @if (_draft.Kind.UsesApiKey())
+            {
+                <MudTextField @bind-Value="_draft.ApiKey" Label="API key" InputType="InputType.Password" Variant="Variant.Outlined" Margin="Margin.Dense"
+                              HelperText="@(_hasKey ? "Leave blank to keep the key already stored on the server." : _draft.Kind.CredentialHint())" />
+            }
+            <p class="hint">@_draft.Kind.CredentialHint()</p>
+            @if (_test is not null)
+            {
+                <MudAlert Severity="@(_test.Ok ? Severity.Success : Severity.Error)" Dense="true" Variant="Variant.Outlined">@TestText</MudAlert>
+            }
+            <div class="editor-actions">
+                <MudButton Variant="Variant.Outlined" OnClick="TestDraft" Disabled="_busy">Test connection</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save" Disabled="_busy">Save</MudButton>
+                @if (_draft.Id is not null)
+                {
+                    <MudButton Variant="Variant.Text" OnClick="Reset">Cancel</MudButton>
+                }
+            </div>
+        </MudPaper>
+
+        <MudPaper Class="editor" Elevation="0">
+            <h2>Password</h2>
+            <MudTextField @bind-Value="_currentPassword" Label="Current password" InputType="InputType.Password" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudTextField @bind-Value="_nextPassword" Label="New password" InputType="InputType.Password" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudButton Variant="Variant.Outlined" OnClick="ChangePassword">Change password</MudButton>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private List<ServiceListItem> _services = [];
+    private List<ActionLogView> _log = [];
+    private ServiceDraft _draft = new();
+    private bool _hasKey;
+    private bool _hasPassword;
+    private bool _busy;
+    private ConnectionTestResult? _test;
+    private string _currentPassword = "";
+    private string _nextPassword = "";
+
+    private string UrlHint => $"Default port {_draft.Kind.DefaultPort()}. qBittorrent and SABnzbd can live on a gluetun host, separate from the *arr apps.";
+
+    private string TestText => _test is null
+        ? ""
+        : _test.Ok
+            ? $"Connected{(string.IsNullOrWhiteSpace(_test.Version) ? "" : $" · {_test.Version}")}."
+            : SecretSanitizer.Clean(_test.Error, _draft.ApiKey, _draft.Password);
+
+    protected override async Task OnInitializedAsync() => await Reload();
+
+    private async Task Reload()
+    {
+        _services = (await Admin.ListAsync()).ToList();
+        _log = (await Admin.RecentActionsAsync()).ToList();
+    }
+
+    private void OnKind(ServiceKind kind)
+    {
+        _draft.Kind = kind;
+        if (string.IsNullOrWhiteSpace(_draft.Name) || Enum.GetNames<ServiceKind>().Contains(_draft.Name) || _draft.Name is "qBittorrent" or "SABnzbd")
+            _draft.Name = kind.DisplayName();
+        _test = null;
+    }
+
+    private void Edit(ServiceListItem service)
+    {
+        _draft = new ServiceDraft
+        {
+            Id = service.Id,
+            Kind = service.Kind,
+            Name = service.Name,
+            BaseUrl = service.BaseUrl,
+            Username = service.Username,
+            Enabled = service.Enabled
+        };
+        _hasKey = service.HasApiKey;
+        _hasPassword = service.HasPassword;
+        _test = null;
+    }
+
+    private void Reset()
+    {
+        _draft = new ServiceDraft();
+        _hasKey = false;
+        _hasPassword = false;
+        _test = null;
+    }
+
+    private async Task Save()
+    {
+        _busy = true;
+        var (ok, error) = await Admin.SaveAsync(_draft);
+        _busy = false;
+        if (!ok)
+        {
+            Snackbar.Add(error ?? "Couldn't save that service.", Severity.Error);
+            return;
+        }
+
+        _draft.ApiKey = null;
+        _draft.Password = null;
+        _hasKey = _draft.Kind.UsesApiKey();
+        _hasPassword = _draft.Kind.UsesPassword();
+        Snackbar.Add("Service saved.", Severity.Success);
+        Refresh.Kick();
+        await Reload();
+    }
+
+    private async Task TestDraft()
+    {
+        _busy = true;
+        _test = await Admin.TestAsync(_draft);
+        _busy = false;
+    }
+
+    private async Task TestSaved(ServiceListItem service)
+    {
+        var result = await Admin.TestSavedAsync(service.Id);
+        var text = result.Ok
+            ? $"Connected{(string.IsNullOrWhiteSpace(result.Version) ? "" : $" · {result.Version}")}."
+            : result.Error ?? "Connection failed.";
+        Snackbar.Add(text, result.Ok ? Severity.Success : Severity.Error);
+    }
+
+    private async Task Toggle(ServiceListItem service, bool enabled)
+    {
+        await Admin.SetEnabledAsync(service.Id, enabled);
+        Refresh.Kick();
+        await Reload();
+    }
+
+    private async Task Delete(ServiceListItem service)
+    {
+        var yes = await Dialogs.ShowMessageBoxAsync(
+            "Delete service?",
+            $"Remove {service.Name}? This does not touch the app itself. The stored credential is deleted from Aggregatarr.",
+            yesText: "Delete",
+            cancelText: "Cancel");
+        if (yes != true)
+            return;
+        await Admin.DeleteAsync(service.Id);
+        if (_draft.Id == service.Id)
+            Reset();
+        Refresh.Kick();
+        await Reload();
+        Snackbar.Add($"{service.Name} removed.", Severity.Success);
+    }
+
+    private async Task ChangePassword()
+    {
+        var state = await Auth.GetAuthenticationStateAsync();
+        var name = state.User.Identity?.Name ?? "";
+        var (ok, error) = await Accounts.ChangePasswordAsync(name, _currentPassword, _nextPassword);
+        if (!ok)
+        {
+            Snackbar.Add(error ?? "Couldn't change the password.", Severity.Error);
+            return;
+        }
+
+        _currentPassword = "";
+        _nextPassword = "";
+        Snackbar.Add("Password updated.", Severity.Success);
+    }
+}

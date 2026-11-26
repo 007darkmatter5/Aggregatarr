@@ -1,0 +1,5 @@
+{
+  "data": [
+    { "source": "sonarr", "type": "error", "message": "Sonarr connection failed" }
+  ]
+}

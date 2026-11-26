@@ -1,0 +1,24 @@
+{
+  "history": {
+    "slots": [
+      {
+        "nzo_id": "SABnzbd_nzo_done",
+        "name": "Low.Orbit.Club.S03E01.720p",
+        "status": "Completed",
+        "fail_message": "",
+        "bytes": 980000000,
+        "category": "tv",
+        "completed": 1795600000
+      },
+      {
+        "nzo_id": "SABnzbd_nzo_bad",
+        "name": "Broken.Release",
+        "status": "Failed",
+        "fail_message": "Not enough repair blocks",
+        "bytes": 1000,
+        "category": "tv",
+        "completed": 1795500000
+      }
+    ]
+  }
+}

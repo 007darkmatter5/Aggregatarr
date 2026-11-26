@@ -1,0 +1,8 @@
+[
+  {
+    "source": "IndexerLongTermStatusCheck",
+    "type": "warning",
+    "message": "No indexers available with RSS sync enabled",
+    "wikiUrl": "https://wiki.servarr.com/sonarr/system"
+  }
+]
