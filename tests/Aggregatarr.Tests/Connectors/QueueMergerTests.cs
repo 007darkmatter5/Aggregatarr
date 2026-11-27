@@ -60,6 +60,41 @@ public sealed class QueueMergerTests
     }
 
     [Fact]
+    public void Keeps_rows_from_many_services_including_two_of_one_kind()
+    {
+        var sources = new List<QueueSource>();
+        for (var i = 0; i < 6; i++)
+        {
+            var kind = (ServiceKind)(i % 5);
+            sources.Add(Source(Guid.NewGuid(), $"{kind} {i}", kind, new RemoteQueueItem
+            {
+                Title = $"Download {i}",
+                ItemId = $"item-{i}",
+                DownloadId = $"dl-{i}",
+                Progress = 0.2,
+                State = "Downloading",
+                IsDownloadClient = kind is ServiceKind.QBittorrent or ServiceKind.Sabnzbd
+            }));
+        }
+
+        sources.Add(Source(Guid.NewGuid(), "Sonarr spare", ServiceKind.Sonarr, new RemoteQueueItem
+        {
+            Title = "Second Sonarr import",
+            ItemId = "spare",
+            Progress = 1,
+            State = "Importing",
+            IsDownloadClient = false
+        }));
+
+        var merged = QueueMerger.Merge(sources);
+        Assert.Equal(7, merged.Count);
+        Assert.Equal(3, merged.Count(i => i.ClientKind == ServiceKind.Sonarr));
+        Assert.Contains(merged, i => i.Title == "Second Sonarr import");
+        Assert.Contains(merged, i => i.Title == "Download 0");
+        Assert.Contains(merged, i => i.Title == "Download 5");
+    }
+
+    [Fact]
     public void Calendar_state_follows_file_and_air_time()
     {
         var now = new DateTimeOffset(2026, 11, 26, 12, 0, 0, TimeSpan.Zero);

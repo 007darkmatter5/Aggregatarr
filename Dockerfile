@@ -24,6 +24,9 @@ ENV ASPNETCORE_URLS=http://+:8080 \
 USER 99:100
 EXPOSE 8080
 VOLUME ["/config"]
+# The runtime image does not ship curl or wget. This reuses the app to GET /healthz.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=25s --retries=3 \
+  CMD ["dotnet", "Aggregatarr.Web.dll", "--healthcheck"]
 ENTRYPOINT ["dotnet", "Aggregatarr.Web.dll"]
 
 LABEL org.opencontainers.image.source="https://github.com/007darkmatter5/Aggregatarr" \

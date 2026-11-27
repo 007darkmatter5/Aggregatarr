@@ -15,6 +15,9 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 
+if (args.Contains("--healthcheck"))
+    Environment.Exit(await HealthProbe.RunAsync());
+
 var builder = WebApplication.CreateBuilder(args);
 
 var configPath = ConfigPath.Resolve(builder.Configuration);
@@ -225,3 +228,25 @@ namespace Aggregatarr.Web
 }
 
 public partial class Program;
+
+/// <summary>
+/// Used by the container HEALTHCHECK. The ASP.NET runtime image has neither curl nor wget,
+/// so the probe is a second short-lived process of this same app.
+/// </summary>
+file static class HealthProbe
+{
+    public static async Task<int> RunAsync()
+    {
+        try
+        {
+            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(4) };
+            using var response = await http.GetAsync("http://127.0.0.1:8080/healthz");
+            var body = await response.Content.ReadAsStringAsync();
+            return response.IsSuccessStatusCode && body.Contains("\"status\":\"ok\"", StringComparison.Ordinal) ? 0 : 1;
+        }
+        catch
+        {
+            return 1;
+        }
+    }
+}
