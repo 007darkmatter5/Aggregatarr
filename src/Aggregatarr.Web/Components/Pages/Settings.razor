@@ -24,7 +24,7 @@
         }
         @foreach (var service in _services)
         {
-            <MudPaper Class="service-card" Elevation="0">
+            <MudPaper @key="service.Id" Class="service-card" Elevation="0">
                 <div class="service-card-top">
                     <span class="kind-dot @ServiceVisuals.Css(service.Kind)"></span>
                     <div>
@@ -77,7 +77,14 @@
     </MudItem>
     <MudItem xs="12" lg="5">
         <MudPaper Class="editor" Elevation="0">
-            <h2>@(_draft.Id is null ? "Add a service" : "Edit " + _draft.Name)</h2>
+            <div class="section-head">
+                <h2>@(_draft.Id is null ? "Add a service" : "Edit " + _draft.Name)</h2>
+                @if (_draft.Id is not null)
+                {
+                    <MudButton Variant="Variant.Text" OnClick="Reset">New service</MudButton>
+                }
+            </div>
+            <p class="hint">@_services.Count saved. Add as many as you run, including two of the same app.</p>
             <MudSelect T="ServiceKind" Value="_draft.Kind" ValueChanged="OnKind" Label="Application" Variant="Variant.Outlined" Margin="Margin.Dense">
                 @foreach (var kind in Enum.GetValues<ServiceKind>())
                 {
@@ -183,6 +190,9 @@
     private async Task Save()
     {
         _busy = true;
+        // A create must not leave the new id on the form. The next Save would
+        // otherwise update that same row, so the list never grows.
+        var creating = _draft.Id is null || _draft.Id == Guid.Empty;
         var (ok, error) = await Admin.SaveAsync(_draft);
         _busy = false;
         if (!ok)
@@ -191,11 +201,17 @@
             return;
         }
 
-        _draft.ApiKey = null;
-        _draft.Password = null;
-        _hasKey = _draft.Kind.UsesApiKey();
-        _hasPassword = _draft.Kind.UsesPassword();
-        Snackbar.Add("Service saved.", Severity.Success);
+        if (creating)
+            Reset();
+        else
+        {
+            _draft.ApiKey = null;
+            _draft.Password = null;
+            _hasKey = _draft.Kind.UsesApiKey();
+            _hasPassword = _draft.Kind.UsesPassword();
+        }
+
+        Snackbar.Add(creating ? "Service added." : "Service saved.", Severity.Success);
         Refresh.Kick();
         await Reload();
     }
