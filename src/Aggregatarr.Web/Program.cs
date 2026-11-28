@@ -66,6 +66,8 @@ builder.Services.AddRazorPages();
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddMudServices();
 
+builder.Services.AddSingleton<ThemePreference>();
+builder.Services.AddScoped<ThemeSettings>();
 builder.Services.AddScoped<AccountService>();
 builder.Services.AddScoped<ServiceAdmin>();
 builder.Services.AddScoped<MediaFetcher>();
@@ -110,6 +112,9 @@ await using (var scope = app.Services.CreateAsyncScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.EnsureCreatedAsync();
     await db.Database.ExecuteSqlRawAsync("PRAGMA journal_mode=WAL;");
+    await SchemaBootstrap.EnsureSettingsAsync(db);
+    var theme = await scope.ServiceProvider.GetRequiredService<ThemeSettings>().GetAsync();
+    app.Services.GetRequiredService<ThemePreference>().Replace(theme, notify: false);
     if (appOptions.DemoMode)
         await DemoSeeder.SeedAsync(scope.ServiceProvider);
 }

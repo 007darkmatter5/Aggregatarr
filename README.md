@@ -30,6 +30,20 @@ Removing a download asks first. Pause and resume do not.
 
 ![Remove confirmation](docs/screenshots/queue-confirm-desktop.png)
 
+## Themes
+
+The app bar palette menu, and the Theme card on Services, choose **Dark**, **Light**, or **LCARS**. Dark is the default and is unchanged. The choice is stored in the SQLite file under `/config`, so it survives a reload and shows up on another device pointed at the same install.
+
+LCARS is an original layout in the TNG/Voyager style: black field, orange elbow, pill segments, and Antonio (self-hosted, SIL Open Font License, see `src/Aggregatarr.Web/wwwroot/fonts/antonio/OFL.txt`). It does not use Star Trek logos. Health problems switch a frame segment to red, with a pulse that stays still when the browser asks for reduced motion.
+
+| LCARS dashboard | LCARS phone |
+| --- | --- |
+| ![LCARS dashboard](docs/screenshots/lcars-dashboard-desktop.png) | ![LCARS phone](docs/screenshots/lcars-dashboard-phone.png) |
+
+| LCARS queue | LCARS calendar |
+| --- | --- |
+| ![LCARS queue](docs/screenshots/lcars-queue-desktop.png) | ![LCARS calendar](docs/screenshots/lcars-calendar-desktop.png) |
+
 ## What you can do
 
 - **Queue.** qBittorrent torrents and SABnzbd jobs in one list, matched to the Sonarr episode, Radarr movie, or Lidarr album when the download id lines up. Name, client, progress, speed, ETA, size, and state. Failed and stuck rows stay at the top. Imports that are still sitting in an *arr queue show up even after the client has finished.

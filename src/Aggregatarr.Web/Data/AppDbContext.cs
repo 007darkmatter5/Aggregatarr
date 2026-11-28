@@ -7,6 +7,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<UserAccount> Users => Set<UserAccount>();
     public DbSet<ServiceEntity> Services => Set<ServiceEntity>();
     public DbSet<ActionLogEntity> ActionLogs => Set<ActionLogEntity>();
+    public DbSet<AppSetting> Settings => Set<AppSetting>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -24,6 +25,14 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(s => s.Name).HasMaxLength(80);
             entity.Property(s => s.BaseUrl).HasMaxLength(300);
             entity.Property(s => s.Username).HasMaxLength(120);
+        });
+
+        modelBuilder.Entity<AppSetting>(entity =>
+        {
+            entity.ToTable("Settings");
+            entity.HasKey(s => s.Key);
+            entity.Property(s => s.Key).HasMaxLength(64);
+            entity.Property(s => s.Value).HasMaxLength(32);
         });
 
         modelBuilder.Entity<ActionLogEntity>(entity =>
