@@ -6,9 +6,21 @@
 @inject ISnackbar Snackbar
 @inject IDialogService Dialogs
 @inject IDashboardRefresh Refresh
+@inject ThemeSettings ThemeStore
+@inject ThemePreference Themes
 @using Aggregatarr.Connectors
 
 <PageTitle>Services · Aggregatarr</PageTitle>
+
+<MudPaper Class="editor theme-picker-card" Elevation="0">
+    <h2>Theme</h2>
+    <p class="hint">Saved on this server, so the same choice opens on every browser.</p>
+    <div class="theme-picker">
+        <MudButton Variant="@(Themes.Current == ThemeChoice.Dark ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" OnClick="@(() => ThemeStore.SetAsync(ThemeChoice.Dark))">Dark</MudButton>
+        <MudButton Variant="@(Themes.Current == ThemeChoice.Light ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" OnClick="@(() => ThemeStore.SetAsync(ThemeChoice.Light))">Light</MudButton>
+        <MudButton Variant="@(Themes.Current == ThemeChoice.Lcars ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" OnClick="@(() => ThemeStore.SetAsync(ThemeChoice.Lcars))">LCARS</MudButton>
+    </div>
+</MudPaper>
 
 <MudGrid Spacing="3">
     <MudItem xs="12" lg="7">

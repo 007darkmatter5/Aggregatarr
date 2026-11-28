@@ -4,78 +4,120 @@
 @inject IJSRuntime Js
 @inject DashboardStore Store
 @inject IDashboardRefresh Refresh
+@inject ThemePreference Themes
+@inject ThemeSettings ThemeStore
 
 <MudThemeProvider Theme="_theme" @bind-IsDarkMode="_dark" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<MudLayout>
-    <MudAppBar Elevation="0" Class="ag-appbar">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="() => _open = !_open" aria-label="Menu" />
-        <a class="brand-lockup" href="/">
-            <img src="icon.svg" width="28" height="28" alt="" />
-            <span>Aggregatarr</span>
-        </a>
-        <MudSpacer />
-        <MudTooltip Text="Refresh">
-            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Inherit" OnClick="RefreshNow" aria-label="Refresh" />
-        </MudTooltip>
-        <MudTooltip Text="@(_dark ? "Light theme" : "Dark theme")">
-            <MudIconButton Icon="@(_dark ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)" Color="Color.Inherit" OnClick="ToggleTheme" aria-label="Toggle theme" />
-        </MudTooltip>
-        <MudTooltip Text="Sign out">
-            <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" OnClick="Logout" aria-label="Sign out" />
-        </MudTooltip>
-    </MudAppBar>
-    <MudDrawer @bind-Open="_open" ClipMode="DrawerClipMode.Always" Breakpoint="Breakpoint.Md" Elevation="0" Variant="DrawerVariant.Responsive" Class="ag-drawer">
-        <MudNavMenu Class="ag-nav">
-            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.SpaceDashboard">Dashboard</MudNavLink>
-            <MudNavLink Href="/queue" Icon="@Icons.Material.Filled.Download">
-                Queue
-                @if (Store.Current.Queue.Count > 0)
-                {
-                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Class="nav-count">@Store.Current.Queue.Count</MudChip>
-                }
-            </MudNavLink>
-            <MudNavLink Href="/calendar" Icon="@Icons.Material.Filled.CalendarMonth">Calendar</MudNavLink>
-            <MudNavLink Href="/activity" Icon="@Icons.Material.Filled.History">Activity</MudNavLink>
-            <MudNavLink Href="/alerts" Icon="@Icons.Material.Filled.NotificationImportant">
-                Alerts
-                @if (ProblemCount > 0)
-                {
-                    <MudChip T="string" Size="Size.Small" Color="Color.Error" Class="nav-count">@ProblemCount</MudChip>
-                }
-            </MudNavLink>
-            <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.Tune">Services</MudNavLink>
-        </MudNavMenu>
-        <div class="drawer-foot">
-            <span class="@(_dark ? "dot ok" : "dot ok")"></span>
-            <span>@Ago</span>
-        </div>
-    </MudDrawer>
-    <MudMainContent Class="ag-main">
-        @if (Store.Current.DemoMode)
-        {
-            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="demo-banner" Icon="@Icons.Material.Filled.Science">
-                Demo mode. Queue, calendar, activity, and alerts are sample data. Hosts such as sonarr.example and gluetun.example are not real.
-            </MudAlert>
-        }
-        <header class="page-head">
-            <div>
-                <p class="eyebrow">Home media</p>
-                <h1>@Title</h1>
+@if (IsLcars)
+{
+    <div class="lcars-frame @(ProblemCount > 0 ? "lcars-alert" : null)">
+        <header class="lcars-top">
+            <div class="lcars-elbow">
+                <a class="lcars-brand" href="/">
+                    <span class="lcars-code">47</span>
+                    <strong>Aggregatarr</strong>
+                </a>
             </div>
-            <p class="updated">@Ago</p>
+            <div class="lcars-top-rest">
+                <div class="lcars-top-pills">
+                    <span class="lcars-pill peach">2153</span>
+                    <span class="lcars-pill lavender">08</span>
+                    <span class="lcars-pill blue">441</span>
+                    <span class="lcars-pill @(ProblemCount > 0 ? "red pulse" : "tan")">@ProblemCount.ToString("000")</span>
+                    <span class="lcars-pill grow"></span>
+                    @ThemeMenu
+                </div>
+                <div class="lcars-top-thin"></div>
+            </div>
         </header>
-        @Body
-    </MudMainContent>
-</MudLayout>
+        <div class="lcars-mid">
+            <nav class="lcars-rail" aria-label="Sections">
+                <NavLink href="/" Match="NavLinkMatch.All" class="lcars-nav"><span>01</span> Dashboard</NavLink>
+                <NavLink href="/queue" class="lcars-nav"><span>02</span> Queue @Count(Store.Current.Queue.Count)</NavLink>
+                <NavLink href="/calendar" class="lcars-nav"><span>03</span> Calendar</NavLink>
+                <NavLink href="/activity" class="lcars-nav"><span>04</span> Activity</NavLink>
+                <NavLink href="/alerts" class="lcars-nav"><span>05</span> Alerts @Count(ProblemCount)</NavLink>
+                <NavLink href="/settings" class="lcars-nav"><span>06</span> Services</NavLink>
+                <div class="lcars-rail-fill"></div>
+                <button type="button" class="lcars-nav lcars-signout" @onclick="Logout"><span>99</span> Sign out</button>
+            </nav>
+            <div class="lcars-screen">
+                @PageBody
+            </div>
+        </div>
+        <footer class="lcars-bottom">
+            <div class="lcars-bottom-elbow"></div>
+            <div class="lcars-bottom-pills">
+                <span class="lcars-pill orange">02-110</span>
+                <span class="lcars-pill peach">@Ago</span>
+                <span class="lcars-pill purple">LCARS</span>
+                <span class="lcars-pill grow blue"></span>
+            </div>
+        </footer>
+    </div>
+}
+else
+{
+    <MudLayout>
+        <MudAppBar Elevation="0" Class="ag-appbar">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="() => _open = !_open" aria-label="Menu" />
+            <a class="brand-lockup" href="/">
+                <img src="icon.svg" width="28" height="28" alt="" />
+                <span>Aggregatarr</span>
+            </a>
+            <MudSpacer />
+            <MudTooltip Text="Refresh">
+                <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Inherit" OnClick="RefreshNow" aria-label="Refresh" />
+            </MudTooltip>
+            @ThemeMenu
+            <MudTooltip Text="Sign out">
+                <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" OnClick="Logout" aria-label="Sign out" />
+            </MudTooltip>
+        </MudAppBar>
+        <MudDrawer @bind-Open="_open" ClipMode="DrawerClipMode.Always" Breakpoint="Breakpoint.Md" Elevation="0" Variant="DrawerVariant.Responsive" Class="ag-drawer">
+            <MudNavMenu Class="ag-nav">
+                <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.SpaceDashboard">Dashboard</MudNavLink>
+                <MudNavLink Href="/queue" Icon="@Icons.Material.Filled.Download">
+                    Queue
+                    @if (Store.Current.Queue.Count > 0)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Class="nav-count">@Store.Current.Queue.Count</MudChip>
+                    }
+                </MudNavLink>
+                <MudNavLink Href="/calendar" Icon="@Icons.Material.Filled.CalendarMonth">Calendar</MudNavLink>
+                <MudNavLink Href="/activity" Icon="@Icons.Material.Filled.History">Activity</MudNavLink>
+                <MudNavLink Href="/alerts" Icon="@Icons.Material.Filled.NotificationImportant">
+                    Alerts
+                    @if (ProblemCount > 0)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Error" Class="nav-count">@ProblemCount</MudChip>
+                    }
+                </MudNavLink>
+                <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.Tune">Services</MudNavLink>
+            </MudNavMenu>
+            <div class="drawer-foot">
+                <span class="dot ok"></span>
+                <span>@Ago</span>
+            </div>
+        </MudDrawer>
+        <MudMainContent Class="ag-main">
+            @PageBody
+        </MudMainContent>
+    </MudLayout>
+}
 
 @code {
-    private readonly MudTheme _theme = AggregatarrTheme.Build();
+    private MudTheme _theme = AggregatarrTheme.Build();
     private bool _open = true;
     private bool _dark = true;
+    private string _name = ThemeChoice.Dark;
+    private string? _painted;
+
+    private bool IsLcars => _name == ThemeChoice.Lcars;
 
     private string Title => PathOf(Navigation) switch
     {
@@ -106,22 +148,50 @@
         }
     }
 
+    private RenderFragment PageBody => @<text>
+        @if (Store.Current.DemoMode)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="demo-banner" Icon="@Icons.Material.Filled.Science">
+                Demo mode. Queue, calendar, activity, and alerts are sample data. Hosts such as sonarr.example and gluetun.example are not real.
+            </MudAlert>
+        }
+        <header class="page-head">
+            <div>
+                <p class="eyebrow">@(IsLcars ? "47-2153" : "Home media")</p>
+                <h1>@Title</h1>
+            </div>
+            <p class="updated">@Ago</p>
+        </header>
+        @Body
+    </text>;
+
+    private RenderFragment ThemeMenu => @<MudMenu Icon="@Icons.Material.Filled.Palette" Color="Color.Inherit" AnchorOrigin="Origin.BottomRight" AriaLabel="Theme">
+        <MudMenuItem OnClick="@(() => Choose(ThemeChoice.Dark))">Dark</MudMenuItem>
+        <MudMenuItem OnClick="@(() => Choose(ThemeChoice.Light))">Light</MudMenuItem>
+        <MudMenuItem OnClick="@(() => Choose(ThemeChoice.Lcars))">LCARS</MudMenuItem>
+    </MudMenu>;
+
+    private static RenderFragment Count(int value) => value > 0
+        ? @<span class="lcars-count">@value</span>
+        : @<span></span>;
+
     protected override void OnInitialized()
     {
+        _name = Themes.Current;
+        ApplyPalette();
         Store.Changed += OnChanged;
         Navigation.LocationChanged += OnLocation;
+        Themes.Changed += OnThemeChanged;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender)
+        if (_painted == _name)
             return;
+        _painted = _name;
         try
         {
-            var theme = await Js.InvokeAsync<string>("aggregatarr.getTheme");
-            _dark = !string.Equals(theme, "light", StringComparison.OrdinalIgnoreCase);
-            await Js.InvokeVoidAsync("aggregatarr.setTheme", _dark ? "dark" : "light");
-            StateHasChanged();
+            await Js.InvokeVoidAsync("aggregatarr.setTheme", _name);
         }
         catch (InvalidOperationException)
         {
@@ -131,23 +201,26 @@
         }
     }
 
+    private void ApplyPalette()
+    {
+        _dark = _name != ThemeChoice.Light;
+        _theme = IsLcars ? AggregatarrTheme.Lcars() : AggregatarrTheme.Build();
+    }
+
+    private void OnThemeChanged() => InvokeAsync(() =>
+    {
+        _name = Themes.Current;
+        ApplyPalette();
+        StateHasChanged();
+    });
+
     private void OnChanged() => InvokeAsync(StateHasChanged);
 
     private void OnLocation(object? sender, LocationChangedEventArgs e) => InvokeAsync(StateHasChanged);
 
     private void RefreshNow() => Refresh.Kick();
 
-    private async Task ToggleTheme()
-    {
-        _dark = !_dark;
-        try
-        {
-            await Js.InvokeVoidAsync("aggregatarr.setTheme", _dark ? "dark" : "light");
-        }
-        catch (InvalidOperationException)
-        {
-        }
-    }
+    private Task Choose(string name) => ThemeStore.SetAsync(name);
 
     private async Task Logout()
     {
@@ -172,5 +245,6 @@
     {
         Store.Changed -= OnChanged;
         Navigation.LocationChanged -= OnLocation;
+        Themes.Changed -= OnThemeChanged;
     }
 }

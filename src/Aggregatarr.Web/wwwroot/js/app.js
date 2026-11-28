@@ -1,9 +1,5 @@
 window.aggregatarr = {
-  getTheme: function () {
-    return localStorage.getItem("aggregatarr-theme") || "dark";
-  },
   setTheme: function (theme) {
-    localStorage.setItem("aggregatarr-theme", theme);
     document.documentElement.dataset.theme = theme;
   },
   width: function () {

@@ -74,6 +74,70 @@ public static class AggregatarrTheme
             Button = new ButtonTypography { FontFamily = ["Outfit", "Figtree", "sans-serif"], FontWeight = "600" }
         }
     };
+
+    public static MudTheme Lcars()
+    {
+        var light = new PaletteLight();
+        var dark = new PaletteDark();
+        ApplyLcars(light);
+        ApplyLcars(dark);
+        return new()
+        {
+        PaletteLight = light,
+        PaletteDark = dark,
+        LayoutProperties = new LayoutProperties
+        {
+            DefaultBorderRadius = "18px",
+            DrawerWidthLeft = "210px"
+        },
+        Typography = new Typography
+        {
+            Default = new DefaultTypography
+            {
+                FontFamily = ["Antonio", "Arial Narrow", "sans-serif"]
+            },
+            H1 = new H1Typography { FontFamily = ["Antonio", "Arial Narrow", "sans-serif"], FontWeight = "700" },
+            H2 = new H2Typography { FontFamily = ["Antonio", "Arial Narrow", "sans-serif"], FontWeight = "700" },
+            H3 = new H3Typography { FontFamily = ["Antonio", "Arial Narrow", "sans-serif"], FontWeight = "700" },
+            H4 = new H4Typography { FontFamily = ["Antonio", "Arial Narrow", "sans-serif"], FontWeight = "700" },
+            H5 = new H5Typography { FontFamily = ["Antonio", "Arial Narrow", "sans-serif"], FontWeight = "700" },
+            H6 = new H6Typography { FontFamily = ["Antonio", "Arial Narrow", "sans-serif"], FontWeight = "700" },
+            Button = new ButtonTypography { FontFamily = ["Antonio", "Arial Narrow", "sans-serif"], FontWeight = "700" }
+            }
+        };
+    }
+
+    private static void ApplyLcars(Palette palette)
+    {
+        palette.Primary = "#FF9900";
+        palette.PrimaryContrastText = "#000000";
+        palette.Secondary = "#99CCFF";
+        palette.SecondaryContrastText = "#000000";
+        palette.Tertiary = "#CC99CC";
+        palette.TertiaryContrastText = "#000000";
+        palette.Background = "#000000";
+        palette.Surface = "#000000";
+        palette.AppbarBackground = "#000000";
+        palette.AppbarText = "#FFCC99";
+        palette.DrawerBackground = "#000000";
+        palette.DrawerText = "#000000";
+        palette.DrawerIcon = "#000000";
+        palette.TextPrimary = "#FFCC99";
+        palette.TextSecondary = "#FF9966";
+        palette.Success = "#99CCFF";
+        palette.SuccessContrastText = "#000000";
+        palette.Warning = "#FF9900";
+        palette.WarningContrastText = "#000000";
+        palette.Error = "#CC3333";
+        palette.ErrorContrastText = "#FFCC99";
+        palette.Info = "#9999FF";
+        palette.InfoContrastText = "#000000";
+        palette.Divider = "#FF990066";
+        palette.LinesDefault = "#FF9900";
+        palette.TableLines = "#FF990055";
+        palette.ActionDefault = "#FFCC99";
+        palette.OverlayDark = "#000000CC";
+    }
 }
 
 public static class ServiceVisuals
